@@ -2,7 +2,7 @@ name: QAT Test Suite
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, init]
   pull_request:
     branches: [main]
 
