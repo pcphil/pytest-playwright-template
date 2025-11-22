@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [main]
 
+# This is an example variables, Use Jobs to fetch key-value secrets from your provider
+env:
+  TEST_USER_EMAIL: 'standard_user'
+  TEST_USER_PASSWORD: 'secret_sauce'
+  HEADLESS: 'true'
+  
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -61,7 +67,3 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
-
-env:
-  HEADLESS: 'true'
-  # ENABLE_TRACE: 'true'  # Uncomment to enable trace collection for all tests
