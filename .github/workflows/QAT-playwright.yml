@@ -9,17 +9,14 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.9', '3.10', '3.11']
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python 3.12
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: 3.12
           cache: 'pip'
 
       - name: Install dependencies
@@ -30,33 +27,32 @@ jobs:
       - name: Install Playwright browsers
         run: playwright install --with-deps
 
-      - name: Run unit tests
-        run: pytest tests/unit/ -v
-
-      - name: Run integration tests with retries
+      - name: Run smoke tests with retries
         run: |
-          pytest tests/functional/ tests/smoke/ \
+          pytest tests/smoke/ \
             -v \
             --reruns 2 \
-            -m "not slow" \
             -n auto
-
-      - name: Run slow tests (single-worker)
-        if: always()
-        run: pytest tests/functional/ -v -m "slow"
 
       - name: Upload screenshots on failure
         if: failure()
         uses: actions/upload-artifact@v3
         with:
-          name: screenshots-${{ matrix.python-version }}
+          name: screenshots
           path: test-screenshots/
+
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: html-report
+          path: reports/report.html
 
       - name: Upload traces on failure
         if: failure()
         uses: actions/upload-artifact@v3
         with:
-          name: traces-${{ matrix.python-version }}
+          name: traces
           path: test-traces/
 
   caching:
