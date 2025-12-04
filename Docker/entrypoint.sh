@@ -1,0 +1,1 @@
+ pytest tests/smoke/ -n auto

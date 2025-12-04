@@ -1,6 +1,7 @@
 """Example pytest tests for playwright."""
 import pytest
 from tests.page_objects.login_page import LoginPage
+from tests.page_objects.home_page import HomePage
 
 @pytest.mark.smoke
 def test_login(page):
@@ -22,3 +23,17 @@ def test_negative_login(page):
     loginPage.click_login()
     error_message = loginPage.get_error_message()
     assert "Epic sadface: Username and password do not match any user in this service" in error_message
+
+@pytest.mark.smoke
+def test_homepage(page):
+    """Example test to verify homepage after login."""
+    loginPage = LoginPage(page)
+    homePage = HomePage(page)
+    loginPage.navigate()
+    loginPage.fill_username()
+    loginPage.fill_password()
+    loginPage.click_login()
+    homePage.check_title()
+    homePage.open_burger_menu()
+
+    

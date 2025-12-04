@@ -6,23 +6,25 @@ on:
   pull_request:
     branches: [main]
 
-# This is an example variables, Use Jobs to fetch key-value secrets from your provider
+# Environment variables — use GitHub Secrets for sensitive data
 env:
-  TEST_USER_EMAIL: 'standard_user'
-  TEST_USER_PASSWORD: 'secret_sauce'
   HEADLESS: 'true'
   
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12']
+      fail-fast: false
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.12
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
-          python-version: 3.12
+          python-version: ${{ matrix.python-version }}
           cache: 'pip'
 
       - name: Install dependencies
@@ -36,28 +38,32 @@ jobs:
       - name: Run smoke tests
         run: |
           pytest tests/smoke/ \
-            -n auto
+            -n auto \
+            --reruns 2 \
+            -m smoke
 
-      - name: Upload screenshots on failure
+      - name: Run integration tests (with retries for flaky tests)
+        run: |
+          pytest tests/integration/ \
+            -n auto \
+            --reruns 1 \
+            -m "integration" \
+            --tb=short
+
+      - name: Upload test artifacts on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: screenshots
-          path: test-screenshots/
+          name: test-artifacts-${{ matrix.python-version }}
+          path: test-artifacts/
+          retention-days: 7
 
       - name: Upload HTML report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: html-report
+          name: html-report-${{ matrix.python-version }}
           path: reports/report.html
-
-      - name: Upload traces on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: traces
-          path: test-traces/
 
   caching:
     runs-on: ubuntu-latest
@@ -67,3 +73,5 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
